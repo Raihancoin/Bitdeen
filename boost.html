@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitDeen Boost</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+    .top-bar {
+      background: #111;
+      color: #facc15;
+      padding: 12px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .container {
+      padding: 20px;
+      text-align: center;
+    }
+    .boost-box {
+      background: #f8f8f8;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #facc15;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+    .bottom-nav a {
+      color: #facc15;
+      text-decoration: none;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">⚡ Boost</div>  <div class="container">
+    <div class="boost-box">
+      <h3>🕓 Time Boost</h3>
+      <p>Next claim time will be extended by +1 hour</p>
+      <p>Time Boost Level: <span id="boostLevel">1</span></p>
+      <p>Required 💎 Diamond: <span id="boostCost">1000</span></p>
+      <button id="timeBoostBtn">⚡ Activate Time Boost</button>
+    </div><div class="boost-box">
+  <h3>🪙 Token Boost</h3>
+  <p>Increase BDN per claim (+1 per level)</p>
+  <p>Token Boost Level: <span id="tokenBoostLevel">0</span></p>
+  <p>Required 💎 Diamond: <span id="tokenBoostCost">2000</span></p>
+  <button id="tokenBoostBtn">🚀 Upgrade Token Claim</button>
+</div>
+
+  </div>  <div class="bottom-nav">
+    <a href="index.html">🏠<br>Home</a>
+    <a href="tasks.html">📋<br>Tasks</a>
+    <a href="referral.html">🔗<br>Referral</a>
+    <a href="boost.html">⚡<br>Boost</a>
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, get, set, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
+      authDomain: "bitdeen-a1ebe.firebaseapp.com",
+      databaseURL: "https://bitdeen-a1ebe-default-rtdb.firebaseio.com",
+      projectId: "bitdeen-a1ebe",
+      storageBucket: "bitdeen-a1ebe.appspot.com",
+      messagingSenderId: "957332775205",
+      appId: "1:957332775205:web:e34cc38d4d5282adc43acc",
+      measurementId: "G-FY8TBYBJ58"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let uid = localStorage.getItem("bitdeen_uid");
+    if (!uid) {
+      uid = "user_" + Math.floor(Math.random() * 1000000000);
+      localStorage.setItem("bitdeen_uid", uid);
+    }
+
+    const boostLevelEl = document.getElementById("boostLevel");
+    const boostCostEl = document.getElementById("boostCost");
+    const tokenBoostLevelEl = document.getElementById("tokenBoostLevel");
+    const tokenBoostCostEl = document.getElementById("tokenBoostCost");
+
+    const timeBoostBtn = document.getElementById("timeBoostBtn");
+    const tokenBoostBtn = document.getElementById("tokenBoostBtn");
+
+    async function loadUser() {
+      const snapshot = await get(child(ref(db), `users/${uid}`));
+      if (!snapshot.exists()) return;
+
+      const user = snapshot.val();
+      const timeBoostLevel = user.boostLevel || 1;
+      const tokenBoostLevel = user.tokenBoostLevel || 0;
+
+      const timeCost = 1000 * Math.pow(2, timeBoostLevel - 1);
+      const tokenCost = 2000 * (tokenBoostLevel + 1);
+
+      boostLevelEl.textContent = timeBoostLevel;
+      boostCostEl.textContent = timeCost;
+      tokenBoostLevelEl.textContent = tokenBoostLevel;
+      tokenBoostCostEl.textContent = tokenCost;
+
+      timeBoostBtn.onclick = async () => {
+        if (user.diamond >= timeCost) {
+          user.diamond -= timeCost;
+          user.nextClaim = user.nextClaim + 3600000;
+          user.boostLevel = timeBoostLevel + 1;
+          await set(ref(db, `users/${uid}`), user);
+          alert("✅ Time Boost activated! +1 hour added to claim cooldown");
+          location.reload();
+        } else {
+          alert("❌ Not enough diamonds for Time Boost!");
+        }
+      };
+
+      tokenBoostBtn.onclick = async () => {
+        if (user.diamond >= tokenCost) {
+          user.diamond -= tokenCost;
+          user.tokenBoostLevel = tokenBoostLevel + 1;
+          await set(ref(db, `users/${uid}`), user);
+          alert(`✅ Token Boost upgraded! Now you will claim ${user.tokenBoostLevel + 1} BDN per hour.`);
+          location.reload();
+        } else {
+          alert("❌ Not enough diamonds for Token Boost!");
+        }
+      };
+    }
+
+    loadUser();
+  </script></body>
+</html>
