@@ -1,81 +1,62 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Referral - BitDeen</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Withdraw - BitDeen</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f9fafb;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
+      background: #fff;
       padding: 20px;
+      color: #111;
       text-align: center;
     }
     h1 {
-      color: #111;
-    }
-    #refLink {
-      background: #fff;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      margin: 10px 0;
-      font-size: 16px;
-      word-break: break-all;
-    }
-    button {
-      background-color: #facc15;
-      color: #111;
-      border: none;
-      padding: 10px 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .stats {
-      margin-top: 20px;
-      background: #fff;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-    }
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #111;
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0;
-    }
-    .bottom-nav a {
       color: #facc15;
-      text-decoration: none;
+    }
+    #walletAddress {
+      margin: 10px 0;
+      font-weight: bold;
+      font-family: monospace;
+      color: #0a7a0a;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: #facc15;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      min-width: 200px;
+    }
+    .btn:disabled {
+      background: #ddd;
+      cursor: not-allowed;
+      color: #999;
+    }
+    .info {
+      margin-top: 20px;
       font-size: 14px;
-      text-align: center;
+      color: gray;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🔗 Your Referral Link</h1>
-    <div id="refLink">Loading...</div>
-    <button id="copyBtn">Copy & Invite Friends</button><div class="stats">
-  <p><strong>👥 Total Referrals:</strong> <span id="refCount">0</span></p>
-  <p><strong>🏆 Your Rank:</strong> <span id="rank">Loading...</span></p>
-</div>
+  <h1>💸 Withdraw</h1>
+  <p>Your BDN Balance: <strong><span id="bdn">Loading...</span></strong></p>
 
-  </div>  <div class="bottom-nav">
-    <a href="index.html">🏠<br>Home</a>
-    <a href="tasks.html">📋<br>Tasks</a>
-    <a href="referral.html">🔗<br>Referral</a>
-    <a href="boost.html">⚡<br>Boost</a>
-  </div>  <script type="module">
+  <button id="connectWalletBtn" class="btn">Connect Wallet</button>
+  <div id="walletAddress"></div>
+
+  <button class="btn" id="withdrawBtn" disabled>Request Withdraw</button>
+  <div class="info" id="infoText">Withdraw will be available from Jan 1, 2027</div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getDatabase, ref, set, update, onValue, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { getDatabase, ref, get, set, update, push, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
@@ -91,37 +72,129 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const uid = localStorage.getItem("bitdeen_uid") || "user_" + Math.floor(Math.random() * 1000000000);
-    localStorage.setItem("bitdeen_uid", uid);
+    const bdnEl = document.getElementById("bdn");
+    const infoText = document.getElementById("infoText");
+    const withdrawBtn = document.getElementById("withdrawBtn");
+    const connectWalletBtn = document.getElementById("connectWalletBtn");
+    const walletAddressEl = document.getElementById("walletAddress");
 
-    const telegramBotUsername = "bitdeen_bot"; // Replace with your actual bot
-    const refLink = `https://t.me/${telegramBotUsername}?start=${uid}`;
+    let userBDN = 0;
+    let userWallet = null;
+    let userUid = null;
 
-    document.getElementById("refLink").textContent = refLink;
-    document.getElementById("copyBtn").addEventListener("click", () => {
-      navigator.clipboard.writeText(refLink);
-      alert("✅ Link copied! Share it with your friends on Telegram.");
-      window.open(refLink, '_blank');
-    });
-
-    const refCountSpan = document.getElementById("refCount");
-    const rankSpan = document.getElementById("rank");
-
-    onValue(ref(db, `users/${uid}/referrals`), (snapshot) => {
-      const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
-      refCountSpan.textContent = count;
-    });
-
-    onValue(ref(db, "users"), (snapshot) => {
-      const allUsers = snapshot.val() || {};
-      const ranking = [];
-      for (const id in allUsers) {
-        const refs = allUsers[id].referrals ? Object.keys(allUsers[id].referrals).length : 0;
-        ranking.push({ id, refs });
+    // MetaMask Wallet connect function
+    async function connectWallet() {
+      if (typeof window.ethereum === "undefined") {
+        alert("MetaMask is not installed. Please install it to connect your wallet.");
+        return;
       }
-      ranking.sort((a, b) => b.refs - a.refs);
-      const userRank = ranking.findIndex(u => u.id === uid) + 1;
-      rankSpan.textContent = `#${userRank} out of ${ranking.length}`;
+
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        userWallet = accounts[0];
+        walletAddressEl.textContent = `Connected Wallet: ${userWallet}`;
+        connectWalletBtn.textContent = "Wallet Connected";
+
+        // Disable connect button after connection
+        connectWalletBtn.disabled = true;
+
+        // Use wallet address as UID (or you can hash if you want)
+        userUid = userWallet.toLowerCase();
+
+        // Load user balance from Firebase
+        await loadBalance();
+
+        // Enable withdraw button if balance and date valid
+        checkWithdrawAvailability();
+      } catch (err) {
+        alert("Wallet connection failed: " + err.message);
+      }
+    }
+
+    async function loadBalance() {
+      if (!userUid) {
+        bdnEl.textContent = "0";
+        userBDN = 0;
+        return;
+      }
+
+      const snap = await get(child(ref(db), `users/${userUid}`));
+      if (snap.exists()) {
+        const data = snap.val();
+        userBDN = data.bdn || 0;
+        bdnEl.textContent = userBDN;
+      } else {
+        bdnEl.textContent = "0";
+        userBDN = 0;
+      }
+    }
+
+    function isWithdrawAvailable() {
+      const now = new Date();
+      const unlock = new Date("2027-01-01T00:00:00");
+      return now >= unlock;
+    }
+
+    function checkWithdrawAvailability() {
+      if (!userWallet) {
+        withdrawBtn.disabled = true;
+        return;
+      }
+      if (!isWithdrawAvailable()) {
+        withdrawBtn.disabled = true;
+        infoText.textContent = "⏳ Withdraw will be available from Jan 1, 2027.";
+        return;
+      }
+      if (userBDN < 1) {
+        withdrawBtn.disabled = true;
+        infoText.textContent = "🚫 You have no BDN to withdraw.";
+        return;
+      }
+      withdrawBtn.disabled = false;
+      infoText.textContent = "";
+    }
+
+    withdrawBtn.addEventListener("click", async () => {
+      if (!userWallet || !userUid) {
+        alert("Please connect your wallet first.");
+        return;
+      }
+
+      if (!isWithdrawAvailable()) {
+        alert("⏳ Withdraw will be available from Jan 1, 2027.");
+        return;
+      }
+
+      if (userBDN < 1) {
+        alert("🚫 You have no BDN to withdraw.");
+        return;
+      }
+
+      const withdrawData = {
+        uid: userUid,
+        wallet: userWallet,
+        amount: userBDN,
+        time: new Date().toISOString(),
+        status: "pending"
+      };
+
+      try {
+        const requestRef = push(ref(db, "withdraw_requests"));
+        await set(requestRef, withdrawData);
+
+        // Reset BDN to 0
+        await update(ref(db, `users/${userUid}`), { bdn: 0 });
+
+        alert("✅ Withdraw request submitted. It will be processed after listing.");
+        bdnEl.textContent = "0";
+        userBDN = 0;
+        checkWithdrawAvailability();
+      } catch (err) {
+        alert("Withdraw request failed: " + err.message);
+      }
     });
-  </script></body>
-</html>
+
+    connectWalletBtn.addEventListener("click", connectWallet);
+  </script>
+</body>
+    </html>
