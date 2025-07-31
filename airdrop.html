@@ -1,0 +1,147 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitDeen Withdraw</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #111;
+    }
+    .top-bar {
+      background: #111;
+      color: #facc15;
+      padding: 16px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .container {
+      padding: 20px;
+      text-align: center;
+    }
+    .withdraw-box {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .withdraw-box h2 {
+      color: #facc15;
+      margin-bottom: 10px;
+    }
+    .withdraw-box p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    .input-field {
+      margin-top: 10px;
+      padding: 8px;
+      width: 80%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .withdraw-btn {
+      background: #facc15;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .note {
+      background: #fff8e1;
+      border-left: 4px solid #facc15;
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 14px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">💸 BitDeen Withdraw</div>  <div class="container">
+    <div class="withdraw-box">
+      <h2>🔗 Connect Wallet & Withdraw</h2>
+      <p id="walletStatus">🦊 Wallet Not Connected</p>
+      <input type="number" class="input-field" id="amount" placeholder="Enter Amount to Withdraw" />
+      <button class="withdraw-btn" id="withdrawBtn">Request Withdraw</button><div class="note">
+    📅 <strong>Note:</strong> Withdraw system will be <strong>automatically activated in 2027</strong> after BitDeen (BDN) token gets listed on Binance. All requests will be processed automatically at that time.
+  </div>
+</div>
+
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
+      authDomain: "bitdeen-a1ebe.firebaseapp.com",
+      databaseURL: "https://bitdeen-a1ebe-default-rtdb.firebaseio.com",
+      projectId: "bitdeen-a1ebe",
+      storageBucket: "bitdeen-a1ebe.appspot.com",
+      messagingSenderId: "957332775205",
+      appId: "1:957332775205:web:e34cc38d4d5282adc43acc",
+      measurementId: "G-FY8TBYBJ58"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let connectedWallet = null;
+    const walletStatus = document.getElementById("walletStatus");
+    const withdrawBtn = document.getElementById("withdrawBtn");
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          connectedWallet = accounts[0];
+          walletStatus.textContent = `🟢 Connected: ${connectedWallet.slice(0, 6)}...${connectedWallet.slice(-4)}`;
+        } catch (err) {
+          walletStatus.textContent = "❌ Wallet Connection Failed";
+        }
+      } else {
+        walletStatus.textContent = "❌ MetaMask Not Detected";
+      }
+    }
+
+    window.addEventListener("load", async () => {
+      const currentYear = new Date().getFullYear();
+      if (currentYear < 2027) {
+        walletStatus.textContent = "⏳ Withdraw will be available after Binance listing in 2027";
+        withdrawBtn.disabled = true;
+        return;
+      }
+      await connectWallet();
+    });
+
+    withdrawBtn.addEventListener("click", async () => {
+      const amount = parseInt(document.getElementById("amount").value.trim());
+      if (!connectedWallet || isNaN(amount) || amount <= 0) {
+        alert("❌ Please connect wallet and enter valid amount.");
+        return;
+      }
+
+      const withdrawData = {
+        wallet: connectedWallet,
+        amount: amount,
+        status: "pending",
+        time: new Date().toISOString()
+      };
+
+      try {
+        await push(ref(db, "withdrawals/"), withdrawData);
+        alert("✅ Withdraw request sent successfully! It will be processed after listing in 2027.");
+      } catch (e) {
+        console.error(e);
+        alert("❌ Error while processing withdraw request.");
+      }
+    });
+  </script></body>
+</html>
