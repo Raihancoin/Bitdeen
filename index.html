@@ -5,10 +5,8 @@
   <title>BitDeen</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <script type="module">
-    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";// Your Firebase configuration
-const firebaseConfig = {
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";const firebaseConfig = {
   apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
   authDomain: "bitdeen-a1ebe.firebaseapp.com",
   databaseURL: "https://bitdeen-a1ebe-default-rtdb.firebaseio.com",
@@ -22,22 +20,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Generate unique user ID from localStorage or create new
 let uid = localStorage.getItem("bitdeen_uid");
 if (!uid) {
   uid = "user_" + Math.floor(Math.random() * 1000000000);
   localStorage.setItem("bitdeen_uid", uid);
 }
 
-// Elements
 const bdnSpan = document.getElementById('bdn');
 const diamondSpan = document.getElementById('diamond');
 const timerEl = document.getElementById('timer');
 const claimBtn = document.getElementById('claimBtn');
 
-let userData = { bdn: 0, diamond: 0, nextClaim: Date.now() };
+let userData = { bdn: 0, diamond: 0, nextClaim: Date.now(), tokenBoostLevel: 0 };
 
-// Load data from Firebase
 async function loadUserData() {
   const snapshot = await get(child(ref(db), `users/${uid}`));
   if (snapshot.exists()) {
@@ -46,6 +41,7 @@ async function loadUserData() {
     await set(ref(db, 'users/' + uid), userData);
   }
   updateUI();
+  updateTimer();
 }
 
 function updateUI() {
@@ -57,7 +53,7 @@ function updateTimer() {
   const now = Date.now();
   if (now >= userData.nextClaim) {
     claimBtn.disabled = false;
-    claimBtn.textContent = 'Claim BDN';
+    claimBtn.textContent = `Claim +${1 + (userData.tokenBoostLevel || 0)} BDN`;
   } else {
     const diff = userData.nextClaim - now;
     const mins = Math.floor(diff / 60000);
@@ -68,8 +64,10 @@ function updateTimer() {
 }
 
 claimBtn.addEventListener('click', async () => {
-  userData.bdn += 1;
-  userData.nextClaim = Date.now() + 3600000;
+  const boostLevel = userData.tokenBoostLevel || 0;
+  const amount = 1 + boostLevel;
+  userData.bdn += amount;
+  userData.nextClaim = Date.now() + 3600000; // 1 hour
   await set(ref(db, 'users/' + uid), userData);
   updateUI();
   updateTimer();
@@ -145,15 +143,11 @@ loadUserData();
       justify-content: space-around;
       padding: 12px 0;
     }
-    .bottom-nav div {
+    .bottom-nav a {
       color: #facc15;
-      text-align: center;
+      text-decoration: none;
       font-size: 14px;
-    }
-    .bottom-nav div i {
-      display: block;
-      font-size: 18px;
-      margin-bottom: 4px;
+      text-align: center;
     }
   </style>
 </head>
@@ -174,10 +168,10 @@ loadUserData();
 </div>
 
   </div>  <div class="bottom-nav">
-    <div><i>🏠</i>Home</div>
-    <div><i>✉️</i>Tasks</div>
-    <div><i>🔗</i>Referral</div>
-    <div><i>⚡️</i>Boost</div>
+    <a href="index.html">🏠<br>Home</a>
+    <a href="tasks.html">📋<br>Tasks</a>
+    <a href="referral.html">🔗<br>Referral</a>
+    <a href="boost.html">⚡<br>Boost</a>
   </div>
 </body>
-                  </html>
+</html>
