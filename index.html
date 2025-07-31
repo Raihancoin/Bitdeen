@@ -1,14 +1,17 @@
 <!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BitDeen Mini App</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitDeen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";const firebaseConfig = {
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";// Your Firebase configuration
+const firebaseConfig = {
   apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
   authDomain: "bitdeen-a1ebe.firebaseapp.com",
+  databaseURL: "https://bitdeen-a1ebe-default-rtdb.firebaseio.com",
   projectId: "bitdeen-a1ebe",
   storageBucket: "bitdeen-a1ebe.appspot.com",
   messagingSenderId: "957332775205",
@@ -17,227 +20,164 @@
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getDatabase(app);
 
-const tg = window.Telegram.WebApp;
-const user = tg.initDataUnsafe?.user;
-const userId = user?.id;
-
-document.getElementById("username").innerText = user?.first_name || "User";
-
-const bdnEl = document.getElementById("bdn");
-const diamondEl = document.getElementById("diamond");
-const claimBtn = document.getElementById("claimBtn");
-const timerText = document.getElementById("timer");
-const timerBox = document.getElementById("timerBox");
-
-let diamonds = 0;
-let bdn = 0;
-let lastClaim = 0;
-const waitTime = 3600000;
-
-async function loadUserData() {
-  const ref = doc(db, "users", String(userId));
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
-    const data = snap.data();
-    diamonds = data.diamonds || 0;
-    bdn = data.bdn || 0;
-    lastClaim = data.lastClaim || 0;
-  } else {
-    await setDoc(ref, {
-      diamonds: 0,
-      bdn: 0,
-      lastClaim: 0
-    });
-  }
-  updateUI();
-  updateClaimUI();
+// Generate unique user ID from localStorage or create new
+let uid = localStorage.getItem("bitdeen_uid");
+if (!uid) {
+  uid = "user_" + Math.floor(Math.random() * 1000000000);
+  localStorage.setItem("bitdeen_uid", uid);
 }
 
-async function claimToken() {
-  const now = Date.now();
-  if ((now - lastClaim) >= waitTime) {
-    bdn++;
-    lastClaim = now;
-    await updateDoc(doc(db, "users", String(userId)), {
-      bdn,
-      lastClaim
-    });
-    updateUI();
-    updateClaimUI();
+// Elements
+const bdnSpan = document.getElementById('bdn');
+const diamondSpan = document.getElementById('diamond');
+const timerEl = document.getElementById('timer');
+const claimBtn = document.getElementById('claimBtn');
+
+let userData = { bdn: 0, diamond: 0, nextClaim: Date.now() };
+
+// Load data from Firebase
+async function loadUserData() {
+  const snapshot = await get(child(ref(db), `users/${uid}`));
+  if (snapshot.exists()) {
+    userData = snapshot.val();
+  } else {
+    await set(ref(db, 'users/' + uid), userData);
   }
+  updateUI();
 }
 
 function updateUI() {
-  bdnEl.innerText = bdn;
-  diamondEl.innerText = diamonds;
+  bdnSpan.textContent = userData.bdn;
+  diamondSpan.textContent = userData.diamond;
 }
 
-function updateClaimUI() {
+function updateTimer() {
   const now = Date.now();
-  const diff = now - lastClaim;
-  const left = waitTime - diff;
-
-  if (left <= 0) {
-    claimBtn.style.display = "inline-block";
-    timerBox.style.display = "none";
+  if (now >= userData.nextClaim) {
+    claimBtn.disabled = false;
+    claimBtn.textContent = 'Claim BDN';
   } else {
-    claimBtn.style.display = "none";
-    timerBox.style.display = "block";
-    updateTimer(left);
-    const interval = setInterval(() => {
-      const remaining = waitTime - (Date.now() - lastClaim);
-      if (remaining <= 0) {
-        clearInterval(interval);
-        updateClaimUI();
-      } else {
-        updateTimer(remaining);
-      }
-    }, 1000);
+    const diff = userData.nextClaim - now;
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    claimBtn.disabled = true;
+    claimBtn.textContent = `Wait: ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 }
 
-function updateTimer(ms) {
-  const min = Math.floor(ms / 60000);
-  const sec = Math.floor((ms % 60000) / 1000);
-  timerText.innerText = `${min}:${sec < 10 ? '0' + sec : sec}`;
-}
+claimBtn.addEventListener('click', async () => {
+  userData.bdn += 1;
+  userData.nextClaim = Date.now() + 3600000;
+  await set(ref(db, 'users/' + uid), userData);
+  updateUI();
+  updateTimer();
+});
 
+setInterval(updateTimer, 1000);
 loadUserData();
 
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #facc15;
-      --accent: #22c55e;
-      --dark: #0f172a;
-      --light: #f8fafc;
-      --card-bg: #ffffff;
-    }body {
-  margin: 0;
-  font-family: 'Rubik', sans-serif;
-  background: var(--dark);
-  color: var(--dark);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.top-bar {
-  height: 10vh;
-  background: #1e1e1e;
-  color: var(--primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  font-weight: bold;
-}
-
-.middle {
-  flex: 1;
-  background: #ffffff;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-name {
-  font-size: 18px;
-  font-weight: bold;
-  color: var(--dark);
-  margin-bottom: 10px;
-}
-
-.diamond-balance {
-  font-size: 16px;
-  color: #444;
-  margin-bottom: 10px;
-}
-
-.logo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  box-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
-  margin-bottom: 10px;
-}
-
-.bdn-balance {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--dark);
-  margin-bottom: 20px;
-}
-
-.claim-section {
-  background: #f1f5f9;
-  padding: 20px;
-  border-radius: 15px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.claim-btn {
-  background: linear-gradient(to right, #facc15, #fbbf24);
-  color: #000;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 30px;
-  font-size: 18px;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(250, 204, 21, 0.3);
-  margin-bottom: 10px;
-  display: none;
-}
-
-.timer-box {
-  font-size: 16px;
-  color: #555;
-}
-
-.bottom-nav {
-  height: 10vh;
-  background: #1e1e1e;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  color: var(--primary);
-}
-
-.nav-btn {
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: #ffffff;
+      color: #000000;
+    }
+    .top-bar {
+      background: #111;
+      color: #facc15;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-bar h1 {
+      font-size: 18px;
+    }
+    .top-bar button {
+      background: #eee;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+    .container {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .token-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 20px auto;
+      box-shadow: 0 0 20px gold;
+    }
+    .balance-section {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    .claim-section {
+      margin-top: 20px;
+    }
+    .claim-button {
+      margin-top: 10px;
+      background: #facc15;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+    }
+    .bottom-nav div {
+      color: #facc15;
+      text-align: center;
+      font-size: 14px;
+    }
+    .bottom-nav div i {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="top-bar">
-    <div id="username">👤 Username</div>
-    <div>BitDeen</div>
-    <button onclick="alert('Airdrop opens after Binance listing.')">Airdrop</button>
-  </div>  <div class="middle">
-    <div class="diamond-balance">💎 Diamonds: <span id="diamond">0</span></div>
-    <img src="https://i.ibb.co/gMDGSYkQ/Elegant-Bit-Deen-Cryptocurrency-Logo.png" alt="Logo" class="logo">
-    <div class="bdn-balance">💰 BDN: <span id="bdn">0</span></div>
-    <div class="claim-section">
-      <button class="claim-btn" id="claimBtn" onclick="claimToken()">Claim</button>
-      <div class="timer-box" id="timerBox">Next claim in: <span id="timer">--:--</span></div>
+    <h1>User</h1>
+    <h1>BitDeen</h1>
+    <button>Airdrop</button>
+  </div>  <div class="container">
+    <div class="balance-section">
+      <p>💎 Diamonds: <span id="diamond">0</span></p>
     </div>
+    <img src="https://i.ibb.co/gMDGSYkQ/Elegant-Bit-Deen-Cryptocurrency-Logo.png" class="token-image" alt="BitDeen Logo" />
+    <div class="balance-section">
+      <p>💰 BDN: <span id="bdn">0</span></p>
+    </div><div class="claim-section">
+  <button class="claim-button" id="claimBtn">Loading...</button>
+</div>
+
   </div>  <div class="bottom-nav">
-    <div class="nav-btn" onclick="alert('Home')">🏠<br>Home</div>
-    <div class="nav-btn" onclick="alert('Tasks')">🧾<br>Tasks</div>
-    <div class="nav-btn" onclick="alert('Referral')">🔗<br>Referral</div>
-    <div class="nav-btn" onclick="alert('Boost')">⚡<br>Boost</div>
+    <div><i>🏠</i>Home</div>
+    <div><i>✉️</i>Tasks</div>
+    <div><i>🔗</i>Referral</div>
+    <div><i>⚡️</i>Boost</div>
   </div>
 </body>
-</html>
+                  </html>
