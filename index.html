@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BitDeen</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
+    // ✅ Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
       authDomain: "bitdeen-a1ebe.firebaseapp.com",
@@ -20,20 +21,28 @@
       measurementId: "G-FY8TBYBJ58"
     };
 
+    // ✅ Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // ✅ GET UID from Telegram URL
+    const params = new URLSearchParams(window.location.search);
+    const uidFromURL = params.get("uid");
+    if (uidFromURL) {
+      localStorage.setItem("bitdeen_uid", uidFromURL);
+    }
+
+    // ✅ Load UID
     let uid = localStorage.getItem("bitdeen_uid");
     if (!uid) {
       uid = "user_" + Math.floor(Math.random() * 1000000000);
       localStorage.setItem("bitdeen_uid", uid);
     }
 
+    // ✅ User Data
     const bdnSpan = document.getElementById('bdn');
     const diamondSpan = document.getElementById('diamond');
-    const timerEl = document.getElementById('timer');
     const claimBtn = document.getElementById('claimBtn');
-
     let userData = { bdn: 0, diamond: 0, nextClaim: Date.now(), tokenBoostLevel: 0 };
 
     async function loadUserData() {
@@ -70,7 +79,7 @@
       const boostLevel = userData.tokenBoostLevel || 0;
       const amount = 1 + boostLevel;
       userData.bdn += amount;
-      userData.nextClaim = Date.now() + 3600000; // 1 hour
+      userData.nextClaim = Date.now() + 3600000;
       await set(ref(db, 'users/' + uid), userData);
       updateUI();
       updateTimer();
@@ -81,52 +90,32 @@
   </script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      background: #ffffff;
-      color: #000000;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #ffffff; color: #000000; }
     .top-bar {
-      background: #111;
-      color: #facc15;
+      background: #111; color: #facc15;
       padding: 10px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .top-bar h1 {
-      font-size: 18px;
-    }
+    .top-bar h1 { font-size: 18px; }
     .top-bar button {
-      background: #eee;
-      border: none;
-      padding: 6px 12px;
+      background: #eee; border: none; padding: 6px 12px;
       border-radius: 6px;
-      cursor: pointer;
     }
     .container {
       text-align: center;
       margin-top: 40px;
     }
     .token-image {
-      width: 120px;
-      height: 120px;
+      width: 120px; height: 120px;
       border-radius: 50%;
       margin: 20px auto;
       box-shadow: 0 0 20px gold;
     }
-    .balance-section {
-      margin-top: 10px;
-      font-size: 18px;
-    }
-    .claim-section {
-      margin-top: 20px;
-    }
+    .balance-section { margin-top: 10px; font-size: 18px; }
+    .claim-section { margin-top: 20px; }
     .claim-button {
       margin-top: 10px;
       background: #facc15;
@@ -155,11 +144,12 @@
     }
   </style>
 </head>
+
 <body>
   <div class="top-bar">
     <h1>User</h1>
     <h1>BitDeen</h1>
-    <button onclick="window.location.href='withdraw.html'">Airdrop</button>
+    <button>Airdrop</button>
   </div>
 
   <div class="container">
