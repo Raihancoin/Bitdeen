@@ -1,134 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BitDeen - Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BDN — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
   <style>
-    /* ====== ISLAMIC COLOR THEME ====== */
-    :root {
-      --primary-color: #0a5669;       /* deep teal */
-      --secondary-color: #facc15;     /* golden */
-      --background-color: #f9f9f9;    /* off-white */
-      --text-color: #222;
-      --accent-color: #044d4d;
-      --btn-hover-color: #357a8a;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .login-container {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 25px rgba(10,86,105,0.15);
-      max-width: 420px;
-      width: 100%;
-      padding: 35px 30px;
-      text-align: center;
-      transition: box-shadow 0.3s ease;
-    }
-    .login-container:hover {
-      box-shadow: 0 6px 40px rgba(10,86,105,0.3);
-    }
-    .login-logo {
-      width: 110px;
-      height: 110px;
-      margin: 0 auto 22px;
-      border-radius: 50%;
-      box-shadow: 0 0 18px var(--secondary-color);
-      background: url('https://i.ibb.co/gMDGSYkQ/Elegant-Bit-Deen-Cryptocurrency-Logo.png') no-repeat center/contain;
-      user-select: none;
-    }
-    h1 {
-      margin-bottom: 8px;
-      font-weight: 700;
-      color: var(--primary-color);
-      font-size: 26px;
-      letter-spacing: 0.04em;
-    }
-    p.subtitle {
-      margin-bottom: 30px;
-      font-size: 15.2px;
-      color: var(--accent-color);
-      font-weight: 500;
-      line-height: 1.4;
-      user-select: none;
-    }
-    button.google-login-btn {
-      background-color: #4285f4;
-      color: white;
-      border: none;
-      padding: 14px 22px;
-      font-size: 17px;
-      font-weight: 600;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(66,133,244,0.45);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      user-select: none;
-    }
-    button.google-login-btn:hover {
-      background-color: var(--btn-hover-color);
-      box-shadow: 0 7px 20px rgba(53,122,138,0.6);
-    }
-    .google-icon {
-      width: 22px;
-      height: 22px;
-      filter: drop-shadow(0 0 1px rgba(0,0,0,0.1));
-    }
-    .footer-text {
-      margin-top: 40px;
-      font-size: 15px;
-      color: #444444dd;
-      line-height: 1.6;
-      max-width: 400px;
-      text-align: center;
-      font-family: 'Inter', sans-serif;
-      user-select: none;
-    }
-    .footer-text strong {
-      color: var(--primary-color);
-    }
-    /* Responsive */
-    @media (max-width: 480px) {
-      .login-container {
-        padding: 28px 20px;
-      }
-      h1 {
-        font-size: 22px;
-      }
-      .footer-text {
-        font-size: 14px;
-      }
-    }
+    :root{--gold:#facc15;--bg1:#020617;--glass:rgba(255,255,255,0.04)}
+    *{box-sizing:border-box;font-family:'Inter',sans-serif}
+    body{margin:0;background:linear-gradient(135deg,#041024,#081528);min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff}
+    .card{width:360px;padding:28px;border-radius:14px;background:var(--glass);border:1px solid rgba(255,255,255,0.06);box-shadow:0 10px 30px rgba(2,6,23,0.6);text-align:center}
+    .logo{width:76px;height:76px;border-radius:14px;margin:0 auto 14px;box-shadow:0 6px 20px rgba(250,204,21,0.12);background:url('https://i.ibb.co/gMDGSYkQ/Elegant-Bit-Deen-Cryptocurrency-Logo.png') center/cover no-repeat}
+    h1{color:var(--gold);font-size:20px;margin:6px 0 8px}
+    p.sub{color:#bfc7d6;font-size:13px;margin-bottom:18px}
+    .google-btn{display:flex;align-items:center;gap:10px;justify-content:center;padding:12px;border-radius:10px;background:#fff;color:#111;border:none;font-weight:700;cursor:pointer;width:100%}
+    .google-btn img{width:20px}
+    .small{font-size:12px;color:#9aa6b7;margin-top:12px}
+    .legal{font-size:11px;color:#7e8b96;margin-top:14px}
   </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo" aria-hidden="true"></div>
+    <h1>BDN Secure Portal</h1>
+    <p class="sub">Stake BDN → Get $1000+ USDT after official listing. Secure Google Sign-in.</p>
 
-  <!-- Firebase SDK -->
+    <button id="googleLogin" class="google-btn">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="G"/>
+      Continue with Google
+    </button>
+
+    <p class="small">By continuing you agree to our Terms & Conditions</p>
+    <p class="legal">🔒 Secure · Encrypted · Powered by Firebase</p>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
+    // ==== তোমার Firebase Config (যা তুমি আগে দিয়েছিলে) ====
     const firebaseConfig = {
       apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
       authDomain: "bitdeen-a1ebe.firebaseapp.com",
+      databaseURL: "https://bitdeen-a1ebe-default-rtdb.firebaseio.com",
       projectId: "bitdeen-a1ebe",
       storageBucket: "bitdeen-a1ebe.appspot.com",
       messagingSenderId: "957332775205",
@@ -138,48 +53,51 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
-    window.onload = () => {
-      const loginBtn = document.getElementById('googleLoginBtn');
-      loginBtn.addEventListener('click', async () => {
-        try {
-          const result = await signInWithPopup(auth, provider);
-          const user = result.user;
-          // Save user info or redirect as needed
-          alert(`Welcome, ${user.displayName}!`);
-          // Redirect to dashboard or home page
-          window.location.href = 'index.html';
-        } catch (error) {
-          alert('Login failed: ' + error.message);
+    document.getElementById('googleLogin').addEventListener('click', async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        // store minimal profile & createdAt
+        const userRef = ref(db, 'users/' + user.uid);
+        const payload = {
+          uid: user.uid,
+          name: user.displayName || '',
+          email: user.email || '',
+          photoURL: user.photoURL || '',
+          createdAt: Date.now(),
+          bdn: 0,
+          diamond: 0,
+          tokenBoostLevel: 0,
+          nextClaim: Date.now(),
+        };
+        // only set if not exists
+        const snap = await get(child(ref(db), `users/${user.uid}`));
+        if (!snap.exists()) {
+          await set(userRef, payload);
+        } else {
+          // ensure basic fields exist
+          await update(userRef, { email: user.email, name: user.displayName, photoURL: user.photoURL });
         }
-      });
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          window.location.href = 'index.html';
+        // handle referral from URL: ?ref=someUid
+        const params = new URLSearchParams(window.location.search);
+        const refUid = params.get('ref');
+        if (refUid && refUid !== user.uid) {
+          // write a lightweight referral record
+          const refPath = ref(db, `referrals/${refUid}/${user.uid}`);
+          await set(refPath, { from: refUid, to: user.uid, at: Date.now(), email: user.email || null });
         }
-      });
-    }
+
+        // redirect to dashboard
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        console.error(err);
+        alert('Login failed. Please try again.');
+      }
+    });
   </script>
-</head>
-
-<body>
-  <main class="login-container" role="main" aria-label="Login to BitDeen platform">
-    <div class="login-logo" aria-hidden="true"></div>
-    <h1>Welcome to BitDeen</h1>
-    <p class="subtitle">Earn tokens ethically with faith and trust</p>
-    <button id="googleLoginBtn" class="google-login-btn" aria-label="Login with Google">
-      <img class="google-icon" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png" alt="Google logo" />
-      Login with Google
-    </button>
-  </main>
-
-  <footer class="footer-text" role="contentinfo">
-    <strong>About BitDeen</strong><br />
-    BitDeen is a trustworthy platform designed to help you earn digital tokens by completing simple and ethical tasks.<br /><br />
-    Join a community that values transparency, fairness, and rewards your genuine efforts. Whether you are new to crypto or experienced, BitDeen makes earning easy and accessible.<br /><br />
-    <em>Your journey to smart and honest earning starts here.</em>
-  </footer>
 </body>
 </html>
