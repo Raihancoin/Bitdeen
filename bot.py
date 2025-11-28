@@ -1,18 +1,28 @@
-// firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { Telegraf } from "telegraf";
+import fetch from "node-fetch";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBxQ4EiH_aTCyJm5_VT0cRSDD97F_ObG1o",
-  authDomain: "bitdeen-a1ebe.firebaseapp.com",
-  databaseURL: "https://bitdeen-a1ebe-default-rtdb.firebaseio.com",
-  projectId: "bitdeen-a1ebe",
-  storageBucket: "bitdeen-a1ebe.appspot.com",
-  messagingSenderId: "957332775205",
-  appId: "1:957332775205:web:e34cc38d4d5282adc43acc"
-};
+const BOT_TOKEN = "7871777877:AAFrlqwM4P7O2wO9NLbAxLtrz-1CenIsShw";
+const bot = new Telegraf(BOT_TOKEN);
+const FIREBASE_DB_URL = "https://bitdeen-a1ebe-default-rtdb.firebaseio.com/users.json";
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// নতুন ইউজার /start করলে Firebase এ সেভ হবে
+bot.start(async (ctx) => {
+  const userId = ctx.from.id;
+  const name = ctx.from.first_name;
 
-export { db, ref, set, update, get, child, onValue };
+  await fetch(`${FIREBASE_DB_URL}/${userId}.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: userId,
+      name: name,
+      balance: 0,
+      joinedAt: Date.now()
+    })
+  });
+
+  ctx.reply(`স্বাগতম ${name}! 🎉\nআপনার BitDeen অ্যাকাউন্ট তৈরি হয়েছে।`);
+});
+
+bot.launch();
+console.log("Bot is running...");
